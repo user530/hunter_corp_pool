@@ -1,13 +1,16 @@
-import React, { useRef, useState } from 'react';
+import React, { MouseEventHandler, useRef, useState } from 'react';
 import styles from './Pool.module.scss';
 import { Ball, drawBall, newBall } from './Ball';
+import { drawCue } from './Cue';
 
 export const Pool = () => {
     const poolRef = useRef<HTMLCanvasElement>(null);
     const [balls, setBalls] = useState<Ball[]>([]);
-    console.log(balls);
+    const [line, setLine] = useState<{ x0: number, y0: number, x1: number, y1: number }>({ x0: 0, y0: 0, x1: 0, y1: 0 });
+
     const handleClick = () => console.log('Canvas clicked!');
-    const handleMouseMove = () => console.log('Mouse moved!');
+    const handleMouseMove: MouseEventHandler<HTMLCanvasElement> = (e) => {
+    };
 
     const handleAddBallClick = () => {
         // No canvas = no balls
@@ -27,15 +30,21 @@ export const Pool = () => {
 
             const ctx = poolRef.current.getContext('2d')!;
             const { width, height, } = poolRef.current;
-            console.log(ctx, width, height);
+
             // Clear canvas
             ctx.clearRect(0, 0, width, height);
+
+            // Draw cue
+            const { x0, x1, y0, y1 } = line;
+
+            drawCue(ctx, { x: x0, y: y0 }, { x: x1, y: y1 });
+
             // Draw balls
             balls.forEach(
                 ball => drawBall(ctx, ball)
             )
         },
-        [balls]
+        [balls, line]
     )
 
     return (
