@@ -1,0 +1,30 @@
+button {
+    margin: 0;
+    padding: 0;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.game-wrapper {
+    display: flex;
+    flex-direction: column;
+    row-gap: 30px;
+}
+
+.pool {
+    background-color: #fff;
+    box-shadow: 0 0 5px 2px cornsilk;
+    width: 800px;
+    height: 600px;
+}
+
+.game-controls {
+
+}
+
+.btn {
+    font-size: 1rem;
+    padding: 1em 1.5em;
+    background-color: cornflowerblue;
+}
