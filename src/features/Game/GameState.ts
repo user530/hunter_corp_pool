@@ -1,6 +1,10 @@
 type BallColors = 'RED' | 'GREEN' | 'BLUE';
 
-class Ball {
+interface Drawable {
+    draw: (ctx: CanvasRenderingContext2D) => void;
+}
+
+class Ball implements Drawable {
     constructor(
         private _x: number,
         private _y: number,
@@ -49,6 +53,27 @@ class Ball {
 
         return new Ball(x, y, r, dx, dy, col)
     }
+
+    draw(ctx: CanvasRenderingContext2D): void {
+        ctx.beginPath();
+        ctx.arc(this._x, this._y, this._r, 0, 2 * Math.PI);
+        ctx.fillStyle = 'red';
+        ctx.fill();
+        ctx.closePath();
+    }
+
+    /**
+     * Check if this ball collides with some other ball
+     * @param otherBall Ball to check collision against
+     * @returns True is balls collide, false otherwise
+     */
+    doCollide(otherBall: Ball): boolean {
+        const deltaX = otherBall._x - this._x;
+        const deltaY = otherBall._y - this._y;
+        const distance = Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
+
+        return distance < this._r + otherBall._r;
+    }
 }
 
 export class GameState {
@@ -67,12 +92,32 @@ export class GameState {
         this._balls.push(newBall);
     }
 
-    addRandomBall() {
-        this._balls.push(Ball.randomBall(
-            {
-                fieldWidth: this._fieldWidth,
-                fieldHeight: this._fieldHeight
-            }
-        ))
+    /**
+     * Try to add a random ball to a balls array
+     */
+    addRandomBall(): void {
+        // IPS flag
+        let iters = 0;
+
+        // Readiness flag - ready when new ball has no collisions
+        let ready = false;
+
+        // While not ready OR untill IPS didn't fire
+        while (!ready && iters++ < 100) {
+            // Generate new ball
+            let newBall = Ball.randomBall(
+                {
+                    fieldWidth: this._fieldWidth,
+                    fieldHeight: this._fieldHeight
+                }
+            );
+
+            // Check against other balls and update readines flag
+            ready = this.balls.reduce(
+                (newFlag, ball) => (newFlag && !ball.doCollide(newBall)), true
+            );
+
+            if (ready) this._balls.push(newBall);
+        }
     }
 }
