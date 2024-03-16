@@ -127,8 +127,56 @@ export class GameState {
             ball => {
                 const [x, y] = ball.coords;
                 const [dx, dy] = ball.velocity;
+                const r = ball.radius;
+
                 ball.coords = [x + dx, y + dy];
+
+                // Border collision applied
+                this.ballToBorder(ball);
             }
         )
+    }
+
+    private ballToBorder(ball: Ball): void {
+        const [x, y] = ball.coords;
+        const [dx, dy] = ball.velocity;
+        const r = ball.radius;
+
+        let xBounce = false;
+        let yBounce = false;
+
+        // Right border
+        if (x + r > this._fieldWidth) {
+            ball.coords = [this._fieldWidth - r, y];
+            xBounce = true;
+        }
+
+        // Left border
+        if (x - r < 0) {
+            ball.coords = [r, y];
+            xBounce = true;
+        }
+
+        // Top border
+        if (y - r < 0) {
+            ball.coords = [ball.coords[0], r];
+            yBounce = true;
+        }
+
+        // Bottom border
+        if (y + r > this._fieldHeight) {
+            ball.coords = [ball.coords[0], this._fieldHeight - r];
+            yBounce = true;
+        }
+
+        // Horizontal bounce
+        if (xBounce) {
+            ball.velocity = [-dx, ball.velocity[1]];
+        }
+
+        // Vertical bounce
+        if (yBounce) {
+            ball.velocity = [ball.velocity[0], -dy];
+        }
     }
 }
