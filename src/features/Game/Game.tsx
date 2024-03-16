@@ -6,7 +6,7 @@ export const Game: React.FC = () => {
     const canvasRef = React.useRef<HTMLCanvasElement>(null);
     const gameState = new GameState(800, 600);
 
-    const clickHandler = () => gameState.addRandomBall();
+    const clickHandler = () => { gameState.addRandomBall(); console.log(gameState.balls) };
 
     React.useEffect(
         () => {
@@ -18,10 +18,18 @@ export const Game: React.FC = () => {
             const ctx = canvasRef.current.getContext('2d')!;
 
             function animation() {
+                // Clear the screen
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+                // Update game state
+                gameState.updateState();
+
+                // Draw it
                 gameState.balls.forEach(
                     ball => ball.draw(ctx)
                 )
 
+                // Repeat
                 requestAnimationFrame(animation)
             }
 

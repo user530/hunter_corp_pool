@@ -48,7 +48,8 @@ class Ball implements Drawable {
         const r = Math.min(fieldWidth / 25, fieldHeight / 25);
         const x = Math.max(r, Math.min(fieldWidth - r, Math.random() * fieldWidth));
         const y = Math.max(r, Math.min(fieldHeight - r, Math.random() * fieldHeight));
-        const dx = 0, dy = 0;
+        const dx = Math.random() * 5 * (Math.round(x) % 2 === 0 ? 1 : -1);
+        const dy = Math.random() * 5 * (Math.round(y) % 2 === 0 ? 1 : -1);
         const col = 'RED';
 
         return new Ball(x, y, r, dx, dy, col)
@@ -119,5 +120,15 @@ export class GameState {
 
             if (ready) this._balls.push(newBall);
         }
+    }
+
+    updateState(): void {
+        this._balls.forEach(
+            ball => {
+                const [x, y] = ball.coords;
+                const [dx, dy] = ball.velocity;
+                ball.coords = [x + dx, y + dy];
+            }
+        )
     }
 }
