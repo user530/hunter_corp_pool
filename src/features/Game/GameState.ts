@@ -5,6 +5,8 @@ interface Drawable {
 }
 
 class Ball implements Drawable {
+    // Restitution koefficient
+    private readonly _e = 0.5;
     // Density koefficient
     private readonly _K = 1;
     private _m: number;
@@ -60,10 +62,14 @@ class Ball implements Drawable {
         return this._id;
     }
 
+    get e() {
+        return this._e;
+    }
+
     static randomBall({ fieldWidth, fieldHeight }: { fieldWidth: number, fieldHeight: number }): Ball {
-        const MAX_SPEED = 5;
-        // const r = Math.min(fieldWidth / 25, fieldHeight / 25);
-        const r = 100;
+        const MAX_SPEED = 10;
+        const r = Math.min(fieldWidth / 25, fieldHeight / 25);
+        // const r = 100;
         const x = Math.max(r, Math.min(fieldWidth - r, Math.random() * fieldWidth));
         const y = Math.max(r, Math.min(fieldHeight - r, Math.random() * fieldHeight));
         const dx = (0.5 - Math.random()) * 2 * MAX_SPEED;
@@ -80,6 +86,10 @@ class Ball implements Drawable {
         ctx.arc(x, y, this.radius, 0, 2 * Math.PI);
         ctx.fillStyle = 'red';
         ctx.fill();
+        ctx.strokeStyle = 'black';
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + this.velocity[0], y + this.velocity[1]);
+        ctx.stroke();
         ctx.closePath();
     }
 
@@ -120,9 +130,6 @@ class Ball implements Drawable {
 
     handleCollision(otherBall: Ball): void {
 
-        // UNCLIP BALLS
-        // this.unclip(otherBall);
-
         // UPDATE VELOCITIES
         const [dx0, dy0] = this.velocity;
         const m0 = this.mass;
@@ -130,9 +137,8 @@ class Ball implements Drawable {
         const [dx1, dy1] = otherBall.velocity;
         const m1 = otherBall.mass;
 
-        // Restitution koefficient
-        const e = 0.9;
-
+        // Resitution koefficient
+        const e = this.e;
         // Precision koefficient
         const precision = 100;
 
@@ -294,6 +300,7 @@ export class GameState {
         const [x, y] = ball.coords;
         const [dx, dy] = ball.velocity;
         const r = ball.radius;
+        const e = ball.e;
 
         let xBounce = false;
         let yBounce = false;
@@ -336,12 +343,12 @@ export class GameState {
 
         // Horizontal bounce - only reflect when moving to the left with negative speed, etc
         if (xBounce) {
-            ball.velocity = [-dx, ball.velocity[1]];
+            ball.velocity = [-dx * e, ball.velocity[1]];
         }
 
         // Vertical bounce
         if (yBounce) {
-            ball.velocity = [ball.velocity[0], -dy];
+            ball.velocity = [ball.velocity[0], -dy * e];
         }
     }
 }
