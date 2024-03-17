@@ -1,13 +1,13 @@
 import React from 'react';
 import './App.css';
-import { Pool } from './features/Pool/Pool';
+import { Game } from './features/Game/Game';
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
         <h2>React pool</h2>
-        <Pool />
+        <Game />
       </header>
     </div>
   );

@@ -19,7 +19,7 @@ class Ball implements Drawable {
         private _col: BallColors,
     ) {
         // Calculate mass based on size and density
-        this._m = this._K * Math.PI * _r * _r;
+        this._m = this._K * Math.PI * (_r ** 2);
     }
 
     get coords(): [number, number] {
@@ -61,12 +61,13 @@ class Ball implements Drawable {
     }
 
     static randomBall({ fieldWidth, fieldHeight }: { fieldWidth: number, fieldHeight: number }): Ball {
+        const MAX_SPEED = 5;
         // const r = Math.min(fieldWidth / 25, fieldHeight / 25);
         const r = 100;
         const x = Math.max(r, Math.min(fieldWidth - r, Math.random() * fieldWidth));
         const y = Math.max(r, Math.min(fieldHeight - r, Math.random() * fieldHeight));
-        const dx = Math.random() * 5 * (Math.round(x) % 2 === 0 ? 1 : -1);
-        const dy = Math.random() * 5 * (Math.round(y) % 2 === 0 ? 1 : -1);
+        const dx = (0.5 - Math.random()) * 2 * MAX_SPEED;
+        const dy = (0.5 - Math.random()) * 2 * MAX_SPEED;
         const col = 'RED';
 
         return new Ball(x, y, r, dx, dy, col)
@@ -87,36 +88,42 @@ class Ball implements Drawable {
      * @param otherBall Ball to check collision against
      * @returns True is balls collide, false otherwise
      */
-    doCollide(otherBall: Ball): boolean {
-        // Prevent 'self-collision'
+    isColliding(otherBall: Ball): boolean {
+        // Prevent 'self-collision' check
         if (this.id === otherBall.id) return false;
 
-        // Check 'static' collision (not calculating movement)
-        const deltaX = otherBall.coords[0] - this.coords[0];
-        const deltaY = otherBall.coords[1] - this.coords[1];
+        const r = this.radius;
+        const r1 = otherBall.radius;
 
-        const distance = Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
+        // Distance between two balls
+        const distance = this.getDistance(otherBall);
 
-        if (distance < this.radius + otherBall.radius) {
-            console.log('Static Collision!');
-            console.log(this.velocity, otherBall.velocity);
+        // If balls already 'clip' through each other
+        if (distance < r + r1) {
+            console.log('Already colliding!');
 
             return true;
         }
 
         // Check 'dynamic' collision (prevent 'telefraging')
-        // const [x1, y1] = otherBall.coords;
-        // const [dx1, dy1] = otherBall.velocity;
+        const [relX, relY] = this.getRelativePos(otherBall);
+        const [relDx, relDy] = this.getRelativeVelocity(otherBall);
 
-        // // Relative velocity
-        // const relativeVel: [number, number] = [dx1 - this._dx, dy1 - this._dy];
+        const dotProduct = relX * relDx + relY * relDy;
 
-        // const something = Math.sqrt(relativeVel[0] * relativeVel[0] + relativeVel[1] * relativeVel[1]);
-        return false
-        // return something >= this._r + otherBall._r;
+        // If dot product of relative position and relative velocity vectors is negative -> they might collide
+        if (dotProduct >= 0) return false;
+        console.log(((relX + relDx) ** 2 + (relY + relDy) ** 2) <= (r + r1) ** 2);
+        // Check if collision course will result in collision
+        return ((relX + relDx) ** 2 + (relY + relDy) ** 2) <= (r + r1) ** 2
     }
 
     handleCollision(otherBall: Ball): void {
+
+        // UNCLIP BALLS
+        // this.unclip(otherBall);
+
+        // UPDATE VELOCITIES
         const [dx0, dy0] = this.velocity;
         const m0 = this.mass;
 
@@ -124,20 +131,83 @@ class Ball implements Drawable {
         const m1 = otherBall.mass;
 
         // Restitution koefficient
-        const e = 0.98;
+        const e = 0.9;
 
-        const thisNewVel: [number, number] = [
+        // Precision koefficient
+        const precision = 100;
+
+        // New velocity vectors
+        const [thisNewDx, thisNewDy] = [
             ((m0 - e * m1) * dx0 + (1 + e) * m1 * dx1) / (m0 + m1),
             ((m0 - e * m1) * dy0 + (1 + e) * m1 * dy1) / (m0 + m1)
-        ];
+        ].map(val => Math.round(val * precision) / precision);
 
-        const otherNewVel: [number, number] = [
+        const [otherNewDx, otherNewDy] = [
             ((1 + e) * m0 * dx0 + (m1 - e * m0) * dx1) / (m0 + m1),
             ((1 + e) * m0 * dy0 + (m1 - e * m0) * dy1) / (m0 + m1)
-        ];
+        ].map(val => Math.round(val * precision) / precision);
 
-        this.velocity = thisNewVel;
-        otherBall.velocity = otherNewVel;
+        this.velocity = [thisNewDx, thisNewDy];
+        otherBall.velocity = [otherNewDx, otherNewDy];
+
+    }
+
+    private getRelativePos(otherBall: Ball): [number, number] {
+        const [x, y] = this.coords;
+        const [x1, y1] = otherBall.coords;
+
+        return [x1 - x, y1 - y];
+    }
+
+    private getDistance(otherBall: Ball): number {
+        const [deltaX, deltaY] = this.getRelativePos(otherBall);
+
+        // Distance between two balls
+        return Math.sqrt((deltaX ** 2) + (deltaY ** 2));
+    }
+
+    private getRelativeVelocity(otherBall: Ball): [number, number] {
+        const [dx, dy] = this.velocity;
+        const [dx1, dy1] = otherBall.velocity;
+
+        // Relative velocity
+        return [dx1 - dx, dy1 - dy];
+    }
+
+    private relativeVelocityMagnitude(otherBall: Ball): number {
+        const [relDx, relDy] = this.getRelativeVelocity(otherBall);
+
+        return Math.sqrt((relDx ** 2) + (relDy ** 2));
+    }
+
+    unclip(otherBall: Ball): void {
+        const [x, y] = this.coords;
+        const r = this.radius;
+        const m = this.mass;
+        const [x1, y1] = otherBall.coords;
+        const r1 = otherBall.radius;
+        const m1 = otherBall.mass;
+
+        // Distance between balls
+        const [relX, relY] = this.getRelativePos(otherBall);
+        const distance = this.getDistance(otherBall);
+
+        // Normalised relative position
+        const [normalRelX, normalRelY] = [relX / distance, relY / distance];
+
+        // Overlap
+        const overlap = (r + r1) - distance;
+
+        // Update positions
+        this.coords = [
+            x - normalRelX * overlap * (m / m + m1),
+            y - normalRelY * overlap * (m1 / m + m1),
+        ]
+
+        otherBall.coords = [
+            x1 + normalRelX * overlap * (m / m + m1),
+            y1 + normalRelY * overlap * (m1 / m + m1),
+        ]
     }
 }
 
@@ -187,7 +257,7 @@ export class GameState {
 
             // Check against other balls and update readines flag
             ready = this.balls.reduce(
-                (newFlag, ball) => (newFlag && !ball.doCollide(newBall)), true
+                (newFlag, ball) => (newFlag && !ball.isColliding(newBall)), true
             );
 
             if (ready) this.addBall(newBall);
@@ -200,17 +270,22 @@ export class GameState {
                 const [x, y] = ball.coords;
                 const [dx, dy] = ball.velocity;
 
-                ball.coords = [x + dx, y + dy];
-
                 // Placeholder, think of some more efficient collision check
                 for (let i = 0; i < this.balls.length; ++i) {
                     const otherBall = this.balls[i];
-                    const collision = ball.doCollide(otherBall);
-                    if (collision) ball.handleCollision(otherBall);
+                    const collision = ball.isColliding(otherBall);
+
+                    if (collision)
+                        ball.handleCollision(otherBall);
                 }
+
+
 
                 // Border collision applied
                 this.ballToBorder(ball);
+
+
+                ball.coords = [x + dx, y + dy];
             }
         )
     }
@@ -224,30 +299,42 @@ export class GameState {
         let yBounce = false;
 
         // Right border
-        if (x + r > this.width) {
+        if (x + r >= this.width) {
             ball.coords = [this.width - r, y];
-            xBounce = true;
+
+            // Bounce back from the right border 
+            if (dx > 0)
+                xBounce = true
         }
 
         // Left border
-        if (x - r < 0) {
+        if (x - r <= 0) {
             ball.coords = [r, y];
-            xBounce = true;
+
+            // Bounce back from the left border
+            if (dx < 0)
+                xBounce = true;
         }
 
         // Top border
-        if (y - r < 0) {
+        if (y - r <= 0) {
             ball.coords = [ball.coords[0], r];
-            yBounce = true;
+
+            // Bounce back from the top border
+            if (dy < 0)
+                yBounce = true;
         }
 
         // Bottom border
-        if (y + r > this.height) {
+        if (y + r >= this.height) {
             ball.coords = [ball.coords[0], this.height - r];
-            yBounce = true;
+
+            // Bounce back from the bottom border
+            if (dy > 0)
+                yBounce = true;
         }
 
-        // Horizontal bounce
+        // Horizontal bounce - only reflect when moving to the left with negative speed, etc
         if (xBounce) {
             ball.velocity = [-dx, ball.velocity[1]];
         }

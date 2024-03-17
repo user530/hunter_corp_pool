@@ -11,10 +11,7 @@ export const Game: React.FC = () => {
     React.useEffect(
         () => {
             if (!canvasRef.current) return;
-            // setInterval(
-            //     () => console.log(gameState.balls),
-            //     1000
-            // );
+
             const ctx = canvasRef.current.getContext('2d')!;
 
             function animation() {
