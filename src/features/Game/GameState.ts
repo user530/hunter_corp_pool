@@ -68,8 +68,8 @@ class Ball implements Drawable {
 
     static randomBall({ fieldWidth, fieldHeight }: { fieldWidth: number, fieldHeight: number }): Ball {
         const MAX_SPEED = 10;
-        // const r = Math.min(fieldWidth / 25, fieldHeight / 25);
-        const r = 50;
+        const r = Math.min(fieldWidth / 25, fieldHeight / 25);
+        // const r = 50;
         const x = Math.max(r, Math.min(fieldWidth - r, Math.random() * fieldWidth));
         const y = Math.max(r, Math.min(fieldHeight - r, Math.random() * fieldHeight));
         const dx = (0.5 - Math.random()) * 2 * MAX_SPEED;
@@ -270,6 +270,9 @@ export class GameState {
 
                     if (collision)
                         ball.handleCollision(otherBall);
+
+                    // Handle ball to mouse interaction
+                    this.ballToMouse(ball);
                 }
 
                 // Border collision applied
@@ -278,6 +281,18 @@ export class GameState {
                 ball.coords = [x + dx, y + dy];
             }
         )
+    }
+
+    private ballToMouse(ball: Ball): void {
+        const [mX, mY] = this._mousePos;
+        const [mDx, mDy] = this._mouseVel;
+
+        // Virtual 'ball' representing mouse (cue)
+        const cue = new Ball(mX, mY, 1, mDx * 10, mDy * 10, 'BLUE');
+
+        if (ball.isColliding(cue))
+            // Bounce them
+            ball.handleCollision(cue);
     }
 
     private ballToBorder(ball: Ball): void {
