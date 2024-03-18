@@ -14,7 +14,6 @@ export const Game: React.FC = () => {
 
     const clickHandler = () => { gameState.addRandomBall(); console.log(gameState.balls) };
     const moveHandler: MouseEventHandler<HTMLCanvasElement> = (e) => {
-        console.log(e);
         const { clientX, clientY, movementX, movementY } = e;
         const { left, top } = canvasRef.current!.getBoundingClientRect();
 

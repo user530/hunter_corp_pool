@@ -175,6 +175,8 @@ export class GameState {
     private readonly _balls: Ball[] = [];
     private _mousePos: [number, number] = [-1, -1];
     private _mouseVel: [number, number] = [0, 0];
+    private readonly _mouseR = 10;
+    private readonly _mouseVelKoef = 1;
 
     constructor(
         private readonly _fieldWidth: number,
@@ -216,14 +218,16 @@ export class GameState {
     drawMouse(ctx: CanvasRenderingContext2D) {
         const [x, y] = this.mousePos;
         const [dx, dy] = this.mouseVel;
+        const r = this._mouseR;
+        const velKoef = this._mouseVelKoef;
 
         ctx.beginPath();
-        ctx.arc(x, y, 5, 0, 2 * Math.PI);
+        ctx.arc(x, y, r, 0, 2 * Math.PI);
         ctx.fillStyle = 'blue';
         ctx.fill();
         ctx.strokeStyle = 'black';
         ctx.moveTo(x, y);
-        ctx.lineTo(x + dx * 10, y + dy * 10);
+        ctx.lineTo(x + dx * velKoef, y + dy * velKoef);
         ctx.stroke();
         ctx.closePath();
     }
@@ -286,9 +290,11 @@ export class GameState {
     private ballToMouse(ball: Ball): void {
         const [mX, mY] = this._mousePos;
         const [mDx, mDy] = this._mouseVel;
+        const r = this._mouseR;
+        const velKoef = this._mouseVelKoef;
 
         // Virtual 'ball' representing mouse (cue)
-        const cue = new Ball(mX, mY, 1, mDx * 10, mDy * 10, 'BLUE');
+        const cue = new Ball(mX, mY, r, mDx * velKoef, mDy * velKoef, 'BLUE');
 
         if (ball.isColliding(cue))
             // Bounce them
