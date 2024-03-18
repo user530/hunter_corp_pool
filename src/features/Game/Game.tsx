@@ -1,9 +1,15 @@
 import React, { MouseEventHandler } from 'react';
 import { GameState } from './GameState';
 
+interface MouseData {
+    mousePos: [number, number];
+    mouseVel: [number, number];
+}
+
 export const Game: React.FC = () => {
     console.log('GAME RENDERED!');
     const canvasRef = React.useRef<HTMLCanvasElement>(null);
+    const mouseRef = React.useRef<MouseData>({ mousePos: [0, 0], mouseVel: [0, 0] });
     const gameState = new GameState(800, 600);
 
     const clickHandler = () => { gameState.addRandomBall(); console.log(gameState.balls) };
@@ -12,11 +18,11 @@ export const Game: React.FC = () => {
         const { clientX, clientY, movementX, movementY } = e;
         const { left, top } = canvasRef.current!.getBoundingClientRect();
 
-        if (!left || !top)
+        if (!left || !top || !mouseRef.current)
             return;
 
-        gameState.mousePos = [clientX - left, clientY - top];
-        gameState.mouseVel = [movementX, movementY];
+        mouseRef.current = { ...mouseRef.current, mousePos: [clientX - left, clientY - top] };
+        mouseRef.current = { ...mouseRef.current, mouseVel: [movementX, movementY] };
     };
 
     React.useEffect(
@@ -29,8 +35,16 @@ export const Game: React.FC = () => {
                 // Clear the screen
                 ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-                // Draw mouse
-                gameState.drawMouse(ctx);
+                // Fetch mouse data from the frame
+                if (mouseRef.current) {
+                    const { mousePos, mouseVel } = mouseRef.current!;
+                    gameState.mousePos = mousePos;
+                    gameState.mouseVel = mouseVel;
+
+                    // Draw mouse
+                    gameState.drawMouse(ctx);
+                }
+
 
                 // Update game state
                 gameState.updateState();
