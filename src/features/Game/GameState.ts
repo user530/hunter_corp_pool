@@ -68,8 +68,8 @@ class Ball implements Drawable {
 
     static randomBall({ fieldWidth, fieldHeight }: { fieldWidth: number, fieldHeight: number }): Ball {
         const MAX_SPEED = 10;
-        const r = Math.min(fieldWidth / 25, fieldHeight / 25);
-        // const r = 100;
+        // const r = Math.min(fieldWidth / 25, fieldHeight / 25);
+        const r = 50;
         const x = Math.max(r, Math.min(fieldWidth - r, Math.random() * fieldWidth));
         const y = Math.max(r, Math.min(fieldHeight - r, Math.random() * fieldHeight));
         const dx = (0.5 - Math.random()) * 2 * MAX_SPEED;
@@ -88,7 +88,7 @@ class Ball implements Drawable {
         ctx.fill();
         ctx.strokeStyle = 'black';
         ctx.moveTo(x, y);
-        ctx.lineTo(x + this.velocity[0], y + this.velocity[1]);
+        ctx.lineTo(x + (this.velocity[0]) * 10, y + (this.velocity[1]) * 10);
         ctx.stroke();
         ctx.closePath();
     }
@@ -108,54 +108,43 @@ class Ball implements Drawable {
         // Distance between two balls
         const distance = this.getDistance(otherBall);
 
-        // If balls already 'clip' through each other
-        if (distance < r + r1) {
-            console.log('Already colliding!');
+        // If balls are not clipped -> no collision we can skip
+        if (distance > r + r1)
+            return false;
 
-            return true;
-        }
-
-        // Check 'dynamic' collision (prevent 'telefraging')
+        // If balls collide we need to check that still have collision course
         const [relX, relY] = this.getRelativePos(otherBall);
         const [relDx, relDy] = this.getRelativeVelocity(otherBall);
 
         const dotProduct = relX * relDx + relY * relDy;
 
         // If dot product of relative position and relative velocity vectors is negative -> they might collide
-        if (dotProduct >= 0) return false;
-        console.log(((relX + relDx) ** 2 + (relY + relDy) ** 2) <= (r + r1) ** 2);
+        if (dotProduct >= 0)
+            return false;
+
         // Check if collision course will result in collision
         return ((relX + relDx) ** 2 + (relY + relDy) ** 2) <= (r + r1) ** 2
     }
 
     handleCollision(otherBall: Ball): void {
-
-        // UPDATE VELOCITIES
-        const [dx0, dy0] = this.velocity;
-        const m0 = this.mass;
-
+        // Prepare the data
+        const [dx, dy] = this.velocity;
         const [dx1, dy1] = otherBall.velocity;
+        const m = this.mass;
         const m1 = otherBall.mass;
-
-        // Resitution koefficient
+        // Restitution
         const e = this.e;
-        // Precision koefficient
-        const precision = 100;
 
-        // New velocity vectors
-        const [thisNewDx, thisNewDy] = [
-            ((m0 - e * m1) * dx0 + (1 + e) * m1 * dx1) / (m0 + m1),
-            ((m0 - e * m1) * dy0 + (1 + e) * m1 * dy1) / (m0 + m1)
-        ].map(val => Math.round(val * precision) / precision);
+        // Update velocity vectors to simulate non elastic collision 
+        this.velocity = [
+            dx + (m1 / (m + m1)) * (1 + e) * (dx1 - dx),
+            dy + (m1 / (m + m1)) * (1 + e) * (dy1 - dy),
+        ];
 
-        const [otherNewDx, otherNewDy] = [
-            ((1 + e) * m0 * dx0 + (m1 - e * m0) * dx1) / (m0 + m1),
-            ((1 + e) * m0 * dy0 + (m1 - e * m0) * dy1) / (m0 + m1)
-        ].map(val => Math.round(val * precision) / precision);
-
-        this.velocity = [thisNewDx, thisNewDy];
-        otherBall.velocity = [otherNewDx, otherNewDy];
-
+        otherBall.velocity = [
+            dx1 + (m / (m + m1)) * (1 + e) * (dx - dx1),
+            dy1 + (m / (m + m1)) * (1 + e) * (dy - dy1),
+        ];
     }
 
     private getRelativePos(otherBall: Ball): [number, number] {
@@ -178,42 +167,6 @@ class Ball implements Drawable {
 
         // Relative velocity
         return [dx1 - dx, dy1 - dy];
-    }
-
-    private relativeVelocityMagnitude(otherBall: Ball): number {
-        const [relDx, relDy] = this.getRelativeVelocity(otherBall);
-
-        return Math.sqrt((relDx ** 2) + (relDy ** 2));
-    }
-
-    unclip(otherBall: Ball): void {
-        const [x, y] = this.coords;
-        const r = this.radius;
-        const m = this.mass;
-        const [x1, y1] = otherBall.coords;
-        const r1 = otherBall.radius;
-        const m1 = otherBall.mass;
-
-        // Distance between balls
-        const [relX, relY] = this.getRelativePos(otherBall);
-        const distance = this.getDistance(otherBall);
-
-        // Normalised relative position
-        const [normalRelX, normalRelY] = [relX / distance, relY / distance];
-
-        // Overlap
-        const overlap = (r + r1) - distance;
-
-        // Update positions
-        this.coords = [
-            x - normalRelX * overlap * (m / m + m1),
-            y - normalRelY * overlap * (m1 / m + m1),
-        ]
-
-        otherBall.coords = [
-            x1 + normalRelX * overlap * (m / m + m1),
-            y1 + normalRelY * overlap * (m1 / m + m1),
-        ]
     }
 }
 
