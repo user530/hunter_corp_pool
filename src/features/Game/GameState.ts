@@ -81,6 +81,7 @@ class Ball implements Drawable {
 
     draw(ctx: CanvasRenderingContext2D): void {
         const [x, y] = this.coords;
+        const [dx, dy] = this.velocity;
 
         ctx.beginPath();
         ctx.arc(x, y, this.radius, 0, 2 * Math.PI);
@@ -88,7 +89,7 @@ class Ball implements Drawable {
         ctx.fill();
         ctx.strokeStyle = 'black';
         ctx.moveTo(x, y);
-        ctx.lineTo(x + (this.velocity[0]) * 10, y + (this.velocity[1]) * 10);
+        ctx.lineTo(x + dx * 10, y + dy * 10);
         ctx.stroke();
         ctx.closePath();
     }
@@ -172,6 +173,8 @@ class Ball implements Drawable {
 
 export class GameState {
     private readonly _balls: Ball[] = [];
+    private _mousePos: [number, number] = [-1, -1];
+    private _mouseVel: [number, number] = [0, 0];
 
     constructor(
         private readonly _fieldWidth: number,
@@ -190,8 +193,39 @@ export class GameState {
         return this._fieldHeight;
     }
 
+    get mousePos() {
+        return this._mousePos;
+    }
+
+    set mousePos([x, y]: [number, number]) {
+        this._mousePos = [x, y];
+    }
+
+    get mouseVel() {
+        return this._mouseVel;
+    }
+
+    set mouseVel([dx, dy]: [number, number]) {
+        this._mouseVel = [dx, dy];
+    }
+
     addBall(newBall: Ball) {
         this.balls.push(newBall);
+    }
+
+    drawMouse(ctx: CanvasRenderingContext2D) {
+        const [x, y] = this.mousePos;
+        const [dx, dy] = this.mouseVel;
+
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, 2 * Math.PI);
+        ctx.fillStyle = 'blue';
+        ctx.fill();
+        ctx.strokeStyle = 'black';
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + dx * 10, y + dy * 10);
+        ctx.stroke();
+        ctx.closePath();
     }
 
     /**
@@ -238,11 +272,8 @@ export class GameState {
                         ball.handleCollision(otherBall);
                 }
 
-
-
                 // Border collision applied
                 this.ballToBorder(ball);
-
 
                 ball.coords = [x + dx, y + dy];
             }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { MouseEventHandler } from 'react';
 import { GameState } from './GameState';
 
 export const Game: React.FC = () => {
@@ -7,6 +7,17 @@ export const Game: React.FC = () => {
     const gameState = new GameState(800, 600);
 
     const clickHandler = () => { gameState.addRandomBall(); console.log(gameState.balls) };
+    const moveHandler: MouseEventHandler<HTMLCanvasElement> = (e) => {
+        console.log(e);
+        const { clientX, clientY, movementX, movementY } = e;
+        const { left, top } = canvasRef.current!.getBoundingClientRect();
+
+        if (!left || !top)
+            return;
+
+        gameState.mousePos = [clientX - left, clientY - top];
+        gameState.mouseVel = [movementX, movementY];
+    };
 
     React.useEffect(
         () => {
@@ -17,6 +28,9 @@ export const Game: React.FC = () => {
             function animation() {
                 // Clear the screen
                 ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+                // Draw mouse
+                gameState.drawMouse(ctx);
 
                 // Update game state
                 gameState.updateState();
@@ -44,6 +58,7 @@ export const Game: React.FC = () => {
                 height={600}
                 style={{ backgroundColor: 'white' }}
                 onClick={clickHandler}
+                onMouseMove={moveHandler}
             ></canvas>
         </>
     )
