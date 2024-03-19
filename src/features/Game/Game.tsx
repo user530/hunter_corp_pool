@@ -8,11 +8,20 @@ interface MouseData {
 
 export const Game: React.FC = () => {
     console.log('GAME RENDERED!');
+    const [mouseMode, setMouseMode] = React.useState<'SELECTION' | 'CUE'>('SELECTION');
     const canvasRef = React.useRef<HTMLCanvasElement>(null);
     const mouseRef = React.useRef<MouseData>({ mousePos: [-100, -100], mouseVel: [0, 0] });
-    const gameState = new GameState(800, 600);
+    const gameState = React.useMemo(() => new GameState(800, 600), []);
+
+    // Activate required mouse mode on render 
+    gameState.mouseMode = mouseMode;
 
     const clickHandler = () => { gameState.addRandomBall(); console.log(gameState.balls) };
+
+    const mouseModeBtnHandler = () => {
+        setMouseMode(current => current === 'SELECTION' ? 'CUE' : 'SELECTION');
+    };
+
     const moveHandler: MouseEventHandler<HTMLCanvasElement> = (e) => {
         const { clientX, clientY, movementX, movementY } = e;
         const { left, top } = canvasRef.current!.getBoundingClientRect();
@@ -41,9 +50,9 @@ export const Game: React.FC = () => {
                     gameState.mouseVel = mouseVel;
 
                     // Draw mouse
-                    gameState.drawMouse(ctx);
+                    if (mouseMode === 'CUE')
+                        gameState.drawMouse(ctx);
                 }
-
 
                 // Update game state
                 gameState.updateState();
@@ -60,7 +69,7 @@ export const Game: React.FC = () => {
             requestAnimationFrame(animation);
 
         },
-        []
+        [gameState, mouseMode]
     )
 
     return (
@@ -73,6 +82,13 @@ export const Game: React.FC = () => {
                 onClick={clickHandler}
                 onMouseMove={moveHandler}
             ></canvas>
+
+            <button
+                onClick={mouseModeBtnHandler}
+            >SET MOUSE MODE: {mouseMode === 'SELECTION'
+                ? 'CUE'
+                : 'SELECTION'
+                }</button>
         </>
     )
 }
