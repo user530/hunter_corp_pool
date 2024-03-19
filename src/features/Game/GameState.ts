@@ -172,11 +172,12 @@ class Ball implements Drawable {
 }
 
 export class GameState {
-    private readonly _balls: Ball[] = [];
-    private _mousePos: [number, number] = [-1, -1];
-    private _mouseVel: [number, number] = [0, 0];
     private readonly _mouseR = 10;
     private readonly _mouseVelKoef = 1;
+    private readonly _frictionKoef = 0.001;
+    private readonly _balls: Ball[] = [];
+    private _mousePos: [number, number] = [-this._mouseR, -this._mouseR];
+    private _mouseVel: [number, number] = [0, 0];
 
     constructor(
         private readonly _fieldWidth: number,
@@ -264,9 +265,6 @@ export class GameState {
     updateState(): void {
         this.balls.forEach(
             ball => {
-                const [x, y] = ball.coords;
-                const [dx, dy] = ball.velocity;
-
                 // Placeholder, think of some more efficient collision check
                 for (let i = 0; i < this.balls.length; ++i) {
                     const otherBall = this.balls[i];
@@ -279,10 +277,20 @@ export class GameState {
                     this.ballToMouse(ball);
                 }
 
+                const [x, y] = ball.coords;
+                const [dx, dy] = ball.velocity;
+
+                // Apply velocity
+                ball.coords = [x + dx, y + dy];
+
+                // PLACEHOLDER for some back-up unclip
+
+                // Friction
+                const frictKoef = this._frictionKoef;
+                ball.velocity = [dx * (1 - frictKoef), dy * (1 - frictKoef)];
+
                 // Border collision applied
                 this.ballToBorder(ball);
-
-                ball.coords = [x + dx, y + dy];
             }
         )
     }

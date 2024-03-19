@@ -9,7 +9,7 @@ interface MouseData {
 export const Game: React.FC = () => {
     console.log('GAME RENDERED!');
     const canvasRef = React.useRef<HTMLCanvasElement>(null);
-    const mouseRef = React.useRef<MouseData>({ mousePos: [0, 0], mouseVel: [0, 0] });
+    const mouseRef = React.useRef<MouseData>({ mousePos: [-100, -100], mouseVel: [0, 0] });
     const gameState = new GameState(800, 600);
 
     const clickHandler = () => { gameState.addRandomBall(); console.log(gameState.balls) };
