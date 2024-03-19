@@ -212,7 +212,7 @@ class Ball implements Drawable {
 export class GameState {
     private _mouseMode: 'SELECTION' | 'CUE' = 'SELECTION';
     private readonly CUE_RADIUS = 10;
-    private readonly CUE_STRENGTH = 0.5;
+    private readonly CUE_STRENGTH = 0.3;
     private readonly FRICTION = 0.001;
     private readonly BALLS: Ball[] = [];
     private _mousePosition: [number, number] = [-this.CUE_RADIUS, -this.CUE_RADIUS];
@@ -264,8 +264,13 @@ export class GameState {
      * @param newBall New ball to add
      */
     addBall(newBall: Ball): void {
+        // Check against other balls and update readines flag
+        const ready = this.balls.reduce(
+            (newFlag, ball) => (newFlag && !ball.isColliding(newBall)),
+            true
+        );
 
-        this.balls.push(newBall);
+        if (ready) this.balls.push(newBall);
     }
 
     /**
@@ -320,7 +325,7 @@ export class GameState {
                 (newFlag, ball) => (newFlag && !ball.isColliding(newBall)), true
             );
 
-            if (ready) this.addBall(newBall);
+            if (ready) this.balls.push(newBall);
         }
     }
 
@@ -360,6 +365,31 @@ export class GameState {
                 this.ballToBorder(ball);
             }
         )
+    }
+
+    findClickedBall(): Ball | undefined {
+        if (this.mouseMode !== 'SELECTION') return undefined;
+        const [mX, mY] = this.mousePos;
+
+        return this.balls.find(
+            (ball) => {
+                const [x, y] = ball.coords;
+                const r = ball.radius;
+
+                return (
+                    (mX >= x - r)
+                    && (mX <= x + r)
+                    && (mY >= y - r)
+                    && (mY <= y + r)
+                )
+            }
+        )
+    }
+
+    fillClickedBall() {
+        // Fetch selected Ball
+        // Change color
+        // Clear selected Ball
     }
 
     /**

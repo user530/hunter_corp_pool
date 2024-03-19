@@ -1,5 +1,6 @@
-import React, { MouseEventHandler } from 'react';
+import React, { FormEventHandler, MouseEventHandler } from 'react';
 import { GameState } from './GameState';
+import styles from './Game.module.css';
 
 interface MouseData {
     mousePos: [number, number];
@@ -13,14 +14,52 @@ export const Game: React.FC = () => {
     const mouseRef = React.useRef<MouseData>({ mousePos: [-100, -100], mouseVel: [0, 0] });
     const gameState = React.useMemo(() => new GameState(800, 600), []);
 
+
+    const popupRef = React.useRef<HTMLFormElement>(null);
+    const popupInputRef = React.useRef<HTMLInputElement>(null);
+
     // Activate required mouse mode on render 
     gameState.mouseMode = mouseMode;
 
-    const clickHandler = () => { gameState.addRandomBall(); console.log(gameState.balls) };
+    const ballClickHandler = () => {
+        const ball = gameState.findClickedBall();
+        // CHANGE
+        if (ball) {
+            console.log(ball.color)
+            // Show popup window
+            popupRef.current?.classList.add(styles['popup--active']);
+        }
+
+        // Set Selected color + Pause frame?
+    };
+
+    const popupSubmitHandler: FormEventHandler<HTMLFormElement> = (e) => {
+        e.preventDefault();
+        // Get new color
+        const newColor = popupInputRef.current?.value;
+        if (!newColor) return; // Signal and close popup
+        // Validate it
+        const isValidColor = /^/.test(newColor);
+        if (!isValidColor) return; // Signal and close popup
+
+        // If valid - update ball color
+        gameState.fillClickedBall(/*newColor*/);
+    };
+
+
+    const popupCancelClickHandler = () => {
+        // Close popup + Clear selection 
+        popupRef.current?.classList.remove(styles['popup--active']);
+    };
 
     const mouseModeBtnHandler = () => {
         setMouseMode(current => current === 'SELECTION' ? 'CUE' : 'SELECTION');
     };
+
+    const addRandomBtnHandler = () => {
+        gameState.addRandomBall();
+        console.log(gameState.balls)
+    }
 
     const moveHandler: MouseEventHandler<HTMLCanvasElement> = (e) => {
         const { clientX, clientY, movementX, movementY } = e;
@@ -74,12 +113,23 @@ export const Game: React.FC = () => {
 
     return (
         <>
+            <form
+                ref={popupRef}
+                className={styles['popup']}
+                onSubmit={popupSubmitHandler}
+            >
+                <h3>Pick a color</h3>
+                <input ref={popupInputRef} type="text" className="color-input" placeholder='#FFF' pattern='^#(?:[0-9a-fA-F]{3,4}){1,2}$' />
+                <input type="submit" value="Set color" />
+                <input type="button" value="Cancel" onClick={popupCancelClickHandler} />
+            </form>
+
             <canvas
                 ref={canvasRef}
                 width={800}
                 height={600}
                 style={{ backgroundColor: 'white' }}
-                onClick={clickHandler}
+                onClick={ballClickHandler}
                 onMouseMove={moveHandler}
             ></canvas>
 
@@ -89,6 +139,10 @@ export const Game: React.FC = () => {
                 ? 'CUE'
                 : 'SELECTION'
                 }</button>
+
+            <button
+                onClick={addRandomBtnHandler}
+            >Add random ball</button>
         </>
     )
 }
