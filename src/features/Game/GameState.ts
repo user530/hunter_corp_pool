@@ -210,6 +210,7 @@ export class GameState {
     private _mousePosition: [number, number] = [-this.CUE_RADIUS, -this.CUE_RADIUS];
     private _mouseVelocity: [number, number] = [0, 0];
     private _selectedBall: Ball | null = null;
+    private _selectionAngle = 0;
 
     constructor(
         private readonly FIELD_WIDTH: number,
@@ -272,6 +273,53 @@ export class GameState {
         );
 
         if (ready) this.balls.push(newBall);
+    }
+
+    drawBalls(ctx: CanvasRenderingContext2D, debugMode = false): void {
+        // Draw all stored balls
+        this.balls.forEach(
+            ball => ball.draw(ctx, debugMode)
+        );
+
+        if (!this.selectedBall) return;
+        const [x, y] = this.selectedBall.coords;
+        const r = this.selectedBall.radius;
+        const triangleHeight = 20;
+
+        // Draw selection
+        for (let i = 0; i < 4; ++i) {
+            const angle = this._selectionAngle + i * Math.PI / 2;
+            const triangleX = x + r * Math.cos(angle);
+            const triangleY = y + r * Math.sin(angle);
+
+            drawSelection(triangleX, triangleY, triangleHeight, angle);
+        }
+
+        function drawSelection(centerX: number, centerY: number, size: number, angle: number) {
+            // Calculate triangle vertices
+            const height = size * Math.sqrt(3) / 2;
+
+            const topX = centerX - Math.cos(angle) * height / 2;
+            const topY = centerY - Math.sin(angle) * height / 2;
+
+            const baseLeftX = centerX + Math.cos(angle + Math.PI / 3) * height / 2;
+            const baseLeftY = centerY + Math.sin(angle + Math.PI / 3) * height / 2;
+
+            const baseRightX = centerX + Math.cos(angle - Math.PI / 3) * height / 2;
+            const baseRightY = centerY + Math.sin(angle - Math.PI / 3) * height / 2;
+
+            // Draw the triangle
+            ctx.beginPath();
+            ctx.moveTo(topX, topY);
+            ctx.lineTo(baseLeftX, baseLeftY);
+            ctx.lineTo(baseRightX, baseRightY);
+            ctx.fillStyle = 'white';
+            ctx.fill()
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        this._selectionAngle -= 0.015;
     }
 
     /**

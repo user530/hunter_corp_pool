@@ -50,12 +50,14 @@ export const Game: React.FC = () => {
         gameState.selectedBall.color = newColor;
 
         popupRef.current?.classList.remove(styles['popup--active']);
+        gameState.selectedBall = null;
     };
 
 
     const popupCancelClickHandler = () => {
         // Close popup + Clear selection 
         popupRef.current?.classList.remove(styles['popup--active']);
+        gameState.selectedBall = null;
     };
 
     const mouseModeBtnHandler = () => {
@@ -103,9 +105,7 @@ export const Game: React.FC = () => {
                 gameState.updateState();
 
                 // Draw it
-                gameState.balls.forEach(
-                    ball => ball.draw(ctx)
-                )
+                gameState.drawBalls(ctx);
 
                 // Repeat
                 requestAnimationFrame(animation)

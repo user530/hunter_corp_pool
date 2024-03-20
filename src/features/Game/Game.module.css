@@ -5,7 +5,7 @@
     height: 300px;
     margin: 0 auto;
     border: 2px solid black;
-    background-color: bisque;
+    background-color: transparent;
     box-shadow: 0 0 5px 2px black;
     z-index: 1;
 }
