@@ -27,7 +27,7 @@ export const Game: React.FC = () => {
 
         // CHANGE
         if (gameState.selectedBall) {
-            console.log(gameState.selectedBall.color)
+            popupInputRef.current!.value = gameState.selectedBall.color;
             // Show popup window
             popupRef.current?.classList.add(styles['popup--active']);
         }
@@ -40,11 +40,9 @@ export const Game: React.FC = () => {
         e.preventDefault();
         // Get new color
         const newColor = popupInputRef.current?.value;
-        console.log(newColor);
+
         if (!newColor) return; // Signal and close popup
-        // Validate it
-        const isValidColor = /^/.test(newColor);
-        if (!isValidColor) return; // Signal and close popup
+
         if (!gameState.selectedBall) return;
         // If valid - update ball color
         gameState.selectedBall.color = newColor;
@@ -118,37 +116,41 @@ export const Game: React.FC = () => {
     )
 
     return (
-        <>
-            <form
-                ref={popupRef}
-                className={styles['popup']}
-                onSubmit={popupSubmitHandler}
-            >
-                <h3>Pick a color</h3>
-                <input ref={popupInputRef} type="text" className="color-input" placeholder='#FFF' pattern='^#(?:[0-9a-fA-F]{3,4}){1,2}$' />
-                <input type="submit" value="Set color" />
-                <input type="button" value="Cancel" onClick={popupCancelClickHandler} />
-            </form>
+        <section className={styles["container"]}>
+            <h1 className={styles["h1"]}>Pool game</h1>
+            <div className={styles["canvas-wrapper"]}>
+                <canvas
+                    ref={canvasRef}
+                    width={800}
+                    height={600}
+                    style={{ backgroundColor: 'white' }}
+                    onClick={ballClickHandler}
+                    onMouseMove={moveHandler}
+                ></canvas>
 
-            <canvas
-                ref={canvasRef}
-                width={800}
-                height={600}
-                style={{ backgroundColor: 'white' }}
-                onClick={ballClickHandler}
-                onMouseMove={moveHandler}
-            ></canvas>
+                <form
+                    ref={popupRef}
+                    className={styles['popup']}
+                    onSubmit={popupSubmitHandler}
+                >
+                    <h3>Pick a color</h3>
+                    <input type="submit" value="Apply color" />
+                    <input ref={popupInputRef} type="color" className="color-input" />
+                </form>
+            </div>
 
-            <button
-                onClick={mouseModeBtnHandler}
-            >SET MOUSE MODE: {mouseMode === 'SELECTION'
-                ? 'CUE'
-                : 'SELECTION'
-                }</button>
+            <div className={styles["game-controls"]}>
+                <button
+                    onClick={mouseModeBtnHandler}
+                >{mouseMode === 'SELECTION'
+                    ? 'CUE'
+                    : 'SELECTION'
+                    }</button>
 
-            <button
-                onClick={addRandomBtnHandler}
-            >Add random ball</button>
-        </>
+                <button
+                    onClick={addRandomBtnHandler}
+                >Add random ball</button>
+            </div>
+        </section>
     )
 }

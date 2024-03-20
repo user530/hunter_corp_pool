@@ -5,10 +5,7 @@ import { Game } from './features/Game/Game';
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <h2>React pool</h2>
-        <Game />
-      </header>
+      <Game />
     </div>
   );
 }

@@ -71,13 +71,13 @@ class Ball implements Drawable {
         const { fieldWidth, fieldHeight } = fieldDimensions;
         const MAX_SPEED = 10;
         const BALL_RADIUS_RATIO = 10;
-        const randomRadius = Math.max(30, Math.random() * Math.min(fieldWidth, fieldHeight) / BALL_RADIUS_RATIO);
+        const randomRadius = Math.max(25, Math.random() * Math.min(fieldWidth, fieldHeight) / BALL_RADIUS_RATIO);
         const x = Math.max(randomRadius, Math.min(fieldWidth - randomRadius, Math.random() * fieldWidth));
         const y = Math.max(randomRadius, Math.min(fieldHeight - randomRadius, Math.random() * fieldHeight));
         const dx = (0.5 - Math.random()) * 2 * MAX_SPEED;
         const dy = (0.5 - Math.random()) * 2 * MAX_SPEED;
-        // Random HEX color formula (https://css-tricks.com/snippets/javascript/random-hex-color/)
-        const randomColor = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+        // Random HEX color formula (https://www.30secondsofcode.org/js/s/random-hex-color-code/)
+        const randomColor = `#${(Math.random() * 0xfffff * 1000000).toString(16).slice(0, 6)}`;
 
         return new Ball(x, y, randomRadius, dx, dy, randomColor)
     }
