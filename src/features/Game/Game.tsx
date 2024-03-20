@@ -1,8 +1,9 @@
-import React, { FormEventHandler, MouseEventHandler } from 'react';
+import React from 'react';
 import { GameState } from './GameState';
 import styles from './Game.module.css';
 import { useRender } from './useRender';
 import { useMouse } from './useMouse';
+import { useGameUI } from './useGameUI';
 
 export interface MouseData {
     mousePos: [number, number];
@@ -12,78 +13,92 @@ export interface MouseData {
 export const Game: React.FC = () => {
     console.log('GAME RENDERED!');
     const canvasRef = React.useRef<HTMLCanvasElement>(null);
+    const gameRef = React.useRef<GameState>(new GameState(800, 600));
+    const gameState = gameRef.current;
     // const [mouseMode, setMouseMode] = React.useState<'SELECTION' | 'CUE'>('SELECTION');
     // const mouseRef = React.useRef<MouseData>({ mousePos: [-100, -100], mouseVel: [0, 0] });
     // const gameState = React.useMemo(() => new GameState(800, 600), []);
-    const gameRef = React.useRef<GameState>(new GameState(800, 600));
-    const gameState = gameRef.current;
 
+    // Custom hook to handle mouse related functionality
     const { mouseMode, setMouseMode, mouseRef } = useMouse();
-    useRender(canvasRef, gameRef, mouseMode, mouseRef);
-
-
-    const popupRef = React.useRef<HTMLFormElement>(null);
-    const popupInputRef = React.useRef<HTMLInputElement>(null);
 
     // Activate required mouse mode on render 
     gameState.mouseMode = mouseMode;
 
-    const ballClickHandler = () => {
-        // Handle selection
-        gameState.selectClicked();
+    // Custom hook that handles render
+    useRender(canvasRef, gameRef, mouseMode, mouseRef);
 
-        // CHANGE
-        if (gameState.selectedBall) {
-            popupInputRef.current!.value = gameState.selectedBall.color;
-            // Show popup window
-            popupRef.current?.classList.add(styles['popup--active']);
-        }
-        else
-            popupRef.current?.classList.remove(styles['popup--active']);
-        // Set Selected color + Pause frame?
-    };
-
-    const popupSubmitHandler: FormEventHandler<HTMLFormElement> = (e) => {
-        e.preventDefault();
-        // Get new color
-        const newColor = popupInputRef.current?.value;
-
-        if (!newColor) return; // Signal and close popup
-
-        if (!gameState.selectedBall) return;
-        // If valid - update ball color
-        gameState.selectedBall.color = newColor;
-
-        popupRef.current?.classList.remove(styles['popup--active']);
-        gameState.selectedBall = null;
-    };
+    // Custom hook that stores all ui handlers
+    const {
+        addRandomBtnHandler,
+        ballClickHandler,
+        mouseModeBtnHandler,
+        moveHandler,
+        popupInputRef,
+        popupRef,
+        popupSubmitHandler,
+    } = useGameUI(canvasRef, mouseRef, gameRef, setMouseMode);
 
 
-    const popupCancelClickHandler = () => {
-        // Close popup + Clear selection 
-        popupRef.current?.classList.remove(styles['popup--active']);
-        gameState.selectedBall = null;
-    };
+    // const popupRef = React.useRef<HTMLFormElement>(null);
+    // const popupInputRef = React.useRef<HTMLInputElement>(null);
 
-    const mouseModeBtnHandler = () => {
-        setMouseMode(current => current === 'SELECTION' ? 'CUE' : 'SELECTION');
-    };
 
-    const addRandomBtnHandler = () => {
-        gameState.addRandomBall();
-        console.log(gameState.balls)
-    }
+    // const ballClickHandler = () => {
+    //     // Handle selection
+    //     gameState.selectClicked();
 
-    const moveHandler: MouseEventHandler<HTMLCanvasElement> = (e) => {
-        const { clientX, clientY, movementX, movementY } = e;
-        const { left, top } = canvasRef.current!.getBoundingClientRect();
+    //     // CHANGE
+    //     if (gameState.selectedBall) {
+    //         popupInputRef.current!.value = gameState.selectedBall.color;
+    //         // Show popup window
+    //         popupRef.current?.classList.add(styles['popup--active']);
+    //     }
+    //     else
+    //         popupRef.current?.classList.remove(styles['popup--active']);
+    //     // Set Selected color + Pause frame?
+    // };
 
-        if (!left || !top || !mouseRef.current)
-            return;
+    // const popupSubmitHandler: FormEventHandler<HTMLFormElement> = (e) => {
+    //     e.preventDefault();
+    //     // Get new color
+    //     const newColor = popupInputRef.current?.value;
 
-        mouseRef.current = { ...mouseRef.current, mousePos: [clientX - left, clientY - top] };
-        mouseRef.current = { ...mouseRef.current, mouseVel: [movementX, movementY] };
-    };
+    //     if (!newColor) return; // Signal and close popup
+
+    //     if (!gameState.selectedBall) return;
+    //     // If valid - update ball color
+    //     gameState.selectedBall.color = newColor;
+
+    //     popupRef.current?.classList.remove(styles['popup--active']);
+    //     gameState.selectedBall = null;
+    // };
+
+    // const popupCancelClickHandler = () => {
+    //     // Close popup + Clear selection 
+    //     popupRef.current?.classList.remove(styles['popup--active']);
+    //     gameState.selectedBall = null;
+    // };
+
+    // const mouseModeBtnHandler = () => {
+    //     setMouseMode(current => current === 'SELECTION' ? 'CUE' : 'SELECTION');
+    // };
+
+    // const addRandomBtnHandler = () => {
+    //     gameState.addRandomBall();
+    //     console.log(gameState.balls)
+    // }
+
+    // const moveHandler: MouseEventHandler<HTMLCanvasElement> = (e) => {
+    //     const { clientX, clientY, movementX, movementY } = e;
+    //     const { left, top } = canvasRef.current!.getBoundingClientRect();
+
+    //     if (!left || !top || !mouseRef.current)
+    //         return;
+
+    //     mouseRef.current = { ...mouseRef.current, mousePos: [clientX - left, clientY - top] };
+    //     mouseRef.current = { ...mouseRef.current, mouseVel: [movementX, movementY] };
+    // };
 
 
 
