@@ -1,6 +1,7 @@
 import React, { FormEventHandler, MouseEventHandler } from 'react';
 import { GameState } from './GameState';
 import styles from './Game.module.css';
+import { useRender } from './useRender';
 
 interface MouseData {
     mousePos: [number, number];
@@ -12,7 +13,9 @@ export const Game: React.FC = () => {
     const [mouseMode, setMouseMode] = React.useState<'SELECTION' | 'CUE'>('SELECTION');
     const canvasRef = React.useRef<HTMLCanvasElement>(null);
     const mouseRef = React.useRef<MouseData>({ mousePos: [-100, -100], mouseVel: [0, 0] });
-    const gameState = React.useMemo(() => new GameState(800, 600), []);
+    // const gameState = React.useMemo(() => new GameState(800, 600), []);
+    const gameRef = React.useRef<GameState>(new GameState(800, 600));
+    const gameState = gameRef.current;
 
 
     const popupRef = React.useRef<HTMLFormElement>(null);
@@ -78,42 +81,44 @@ export const Game: React.FC = () => {
         mouseRef.current = { ...mouseRef.current, mouseVel: [movementX, movementY] };
     };
 
-    React.useEffect(
-        () => {
-            if (!canvasRef.current) return;
+    useRender(canvasRef, gameRef, mouseMode, mouseRef);
 
-            const ctx = canvasRef.current.getContext('2d')!;
+    // React.useEffect(
+    //     () => {
+    //         if (!canvasRef.current) return;
 
-            function animation() {
-                // Clear the screen
-                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    //         const ctx = canvasRef.current.getContext('2d')!;
 
-                // Fetch mouse data from the frame
-                if (mouseRef.current) {
-                    const { mousePos, mouseVel } = mouseRef.current!;
-                    gameState.mousePos = mousePos;
-                    gameState.mouseVel = mouseVel;
+    //         function animation() {
+    //             // Clear the screen
+    //             ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-                    // Draw mouse
-                    if (mouseMode === 'CUE')
-                        gameState.drawMouse(ctx);
-                }
+    //             // Fetch mouse data from the frame
+    //             if (mouseRef.current) {
+    //                 const { mousePos, mouseVel } = mouseRef.current!;
+    //                 gameState.mousePos = mousePos;
+    //                 gameState.mouseVel = mouseVel;
 
-                // Update game state
-                gameState.updateState();
+    //                 // Draw mouse
+    //                 if (mouseMode === 'CUE')
+    //                     gameState.drawMouse(ctx);
+    //             }
 
-                // Draw it
-                gameState.drawBalls(ctx);
+    //             // Update game state
+    //             gameState.updateState();
 
-                // Repeat
-                requestAnimationFrame(animation)
-            }
+    //             // Draw it
+    //             gameState.drawBalls(ctx);
 
-            requestAnimationFrame(animation);
+    //             // Repeat
+    //             requestAnimationFrame(animation)
+    //         }
 
-        },
-        [gameState, mouseMode]
-    )
+    //         requestAnimationFrame(animation);
+
+    //     },
+    //     [gameState, mouseMode]
+    // )
 
     return (
         <section className={styles["container"]}>
