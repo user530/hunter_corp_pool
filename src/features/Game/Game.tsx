@@ -2,20 +2,24 @@ import React, { FormEventHandler, MouseEventHandler } from 'react';
 import { GameState } from './GameState';
 import styles from './Game.module.css';
 import { useRender } from './useRender';
+import { useMouse } from './useMouse';
 
-interface MouseData {
+export interface MouseData {
     mousePos: [number, number];
     mouseVel: [number, number];
 }
 
 export const Game: React.FC = () => {
     console.log('GAME RENDERED!');
-    const [mouseMode, setMouseMode] = React.useState<'SELECTION' | 'CUE'>('SELECTION');
     const canvasRef = React.useRef<HTMLCanvasElement>(null);
-    const mouseRef = React.useRef<MouseData>({ mousePos: [-100, -100], mouseVel: [0, 0] });
+    // const [mouseMode, setMouseMode] = React.useState<'SELECTION' | 'CUE'>('SELECTION');
+    // const mouseRef = React.useRef<MouseData>({ mousePos: [-100, -100], mouseVel: [0, 0] });
     // const gameState = React.useMemo(() => new GameState(800, 600), []);
     const gameRef = React.useRef<GameState>(new GameState(800, 600));
     const gameState = gameRef.current;
+
+    const { mouseMode, setMouseMode, mouseRef } = useMouse();
+    useRender(canvasRef, gameRef, mouseMode, mouseRef);
 
 
     const popupRef = React.useRef<HTMLFormElement>(null);
@@ -81,7 +85,7 @@ export const Game: React.FC = () => {
         mouseRef.current = { ...mouseRef.current, mouseVel: [movementX, movementY] };
     };
 
-    useRender(canvasRef, gameRef, mouseMode, mouseRef);
+
 
     // React.useEffect(
     //     () => {
