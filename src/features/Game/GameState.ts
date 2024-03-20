@@ -1,11 +1,3 @@
-type BallColors = 'RED' | 'GREEN' | 'BLUE';
-
-enum Colors {
-    'Red',
-    'Green',
-    'Blue',
-}
-
 interface Drawable {
     draw: (ctx: CanvasRenderingContext2D) => void;
 }
@@ -217,6 +209,7 @@ export class GameState {
     private readonly BALLS: Ball[] = [];
     private _mousePosition: [number, number] = [-this.CUE_RADIUS, -this.CUE_RADIUS];
     private _mouseVelocity: [number, number] = [0, 0];
+    private _selectedBall: Ball | null = null;
 
     constructor(
         private readonly FIELD_WIDTH: number,
@@ -257,6 +250,14 @@ export class GameState {
 
     set mouseMode(newMode: 'SELECTION' | 'CUE') {
         this._mouseMode = newMode;
+    }
+
+    get selectedBall(): Ball | null {
+        return this._selectedBall;
+    }
+
+    set selectedBall(newSelection: Ball | null) {
+        this._selectedBall = newSelection;
     }
 
     /**
@@ -367,11 +368,13 @@ export class GameState {
         )
     }
 
-    findClickedBall(): Ball | undefined {
-        if (this.mouseMode !== 'SELECTION') return undefined;
+    selectClicked(): void {
+        if (this.mouseMode !== 'SELECTION') return;
+
         const [mX, mY] = this.mousePos;
 
-        return this.balls.find(
+        // Selection click result
+        const result: Ball | undefined = this.balls.find(
             (ball) => {
                 const [x, y] = ball.coords;
                 const r = ball.radius;
@@ -384,12 +387,8 @@ export class GameState {
                 )
             }
         )
-    }
 
-    fillClickedBall() {
-        // Fetch selected Ball
-        // Change color
-        // Clear selected Ball
+        this.selectedBall = result ? result : null;
     }
 
     /**

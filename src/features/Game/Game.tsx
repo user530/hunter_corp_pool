@@ -22,14 +22,17 @@ export const Game: React.FC = () => {
     gameState.mouseMode = mouseMode;
 
     const ballClickHandler = () => {
-        const ball = gameState.findClickedBall();
+        // Handle selection
+        gameState.selectClicked();
+
         // CHANGE
-        if (ball) {
-            console.log(ball.color)
+        if (gameState.selectedBall) {
+            console.log(gameState.selectedBall.color)
             // Show popup window
             popupRef.current?.classList.add(styles['popup--active']);
         }
-
+        else
+            popupRef.current?.classList.remove(styles['popup--active']);
         // Set Selected color + Pause frame?
     };
 
@@ -37,13 +40,16 @@ export const Game: React.FC = () => {
         e.preventDefault();
         // Get new color
         const newColor = popupInputRef.current?.value;
+        console.log(newColor);
         if (!newColor) return; // Signal and close popup
         // Validate it
         const isValidColor = /^/.test(newColor);
         if (!isValidColor) return; // Signal and close popup
-
+        if (!gameState.selectedBall) return;
         // If valid - update ball color
-        gameState.fillClickedBall(/*newColor*/);
+        gameState.selectedBall.color = newColor;
+
+        popupRef.current?.classList.remove(styles['popup--active']);
     };
 
 
